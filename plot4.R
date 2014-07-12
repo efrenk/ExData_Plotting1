@@ -1,33 +1,29 @@
-## Getting full dataset
-data_full <- read.csv("./household_power_consumption.txt", header=T, sep=';', na.strings="?", 
-                      nrows=2075259, check.names=F, stringsAsFactors=F, comment.char="", quote='\"')
-data_full$Date <- as.Date(data_full$Date, format="%d/%m/%Y")
+rm(list=ls())
+#reading data into R:
+cons<- read.table("household_power_consumption.txt", sep=";",nrows= 2075260, header=TRUE, quote= "", strip.white=TRUE, stringsAsFactors = FALSE, na.strings= "?")
 
-## Subsetting the data
-data <- subset(data_full, subset=(Date >= "2007-02-01" & Date <= "2007-02-02"))
-rm(data_full)
+# Subsetting the full data to obtain the data related to two days: 
+sub<- subset(cons, (cons$Date == "1/2/2007" | cons$Date== "2/2/2007")) 
 
-## Converting dates
-datetime <- paste(as.Date(data$Date), data$Time)
-data$Datetime <- as.POSIXct(datetime)
+# Changing the class of Date variable from character to Date: 
+sub$Date <- as.Date(sub$Date, format = "%d/%m/%Y")
+# Combining the Date and Time variable and creating a new column in dataset named "DateTime":
+sub$DateTime <- as.POSIXct(paste(sub$Date, sub$Time))
 
-## Plot 4
-par(mfrow=c(2,2), mar=c(4,4,2,1), oma=c(0,0,2,0))
-with(data, {
-    plot(Global_active_power~Datetime, type="l", 
-         ylab="Global Active Power (kilowatts)", xlab="")
-    plot(Voltage~Datetime, type="l", 
-         ylab="Voltage (volt)", xlab="")
-    plot(Sub_metering_1~Datetime, type="l", 
-         ylab="Global Active Power (kilowatts)", xlab="")
-    lines(Sub_metering_2~Datetime,col='Red')
-    lines(Sub_metering_3~Datetime,col='Blue')
-    legend("topright", col=c("black", "red", "blue"), lty=1, lwd=2, bty="n",
-           legend=c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"))
-    plot(Global_reactive_power~Datetime, type="l", 
-         ylab="Global Rective Power (kilowatts)",xlab="")
-})
+# Creating the plot4:
+png("plot4.png", width = 480, height = 480)
+par(mfcol=c(2,2))
 
-## Saving to file
-dev.copy(png, file="plot4.png", height=480, width=480)
+plot(sub$DateTime, sub$Global_active_power, type="l", ylab= "Global Active Power", xlab="")
+
+plot(sub$DateTime, sub$Sub_metering_1, type="l", ylab= "Energy sub metering", xlab="")
+lines(sub$DateTime, sub$Sub_metering_2, type="l", col="red")
+lines(sub$DateTime, sub$Sub_metering_3, type="l", col="blue")
+legend("topright", c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"), lty=1, col=c("black", "red", "blue"))
+
+plot(sub$DateTime,sub$Voltage,type="l",ylab="Voltage",xlab="datetime")
+
+plot(sub$DateTime,sub$Global_reactive_power,type='l',xlab="datetime",ylab="Global_reactive_power")
+
 dev.off()
+
